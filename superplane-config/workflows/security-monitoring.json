@@ -1,0 +1,107 @@
+{
+  "name": "Real-Time Security Monitoring",
+  "description": "Automated security incident response for smart contracts",
+  "version": "1.0.0",
+  "triggers": [
+    {
+      "type": "webhook",
+      "name": "Contract Event",
+      "event": "security_alert"
+    },
+    {
+      "type": "schedule",
+      "name": "Security Scan",
+      "cron": "0 */6 * * *"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "security-event",
+      "type": "trigger",
+      "component": "blockchain-monitor",
+      "action": "security-event",
+      "config": {
+        "chains": ["algorand", "stellar", "solana"],
+        "event_types": ["unauthorized_access", "large_transfer", "contract_upgrade"]
+      }
+    },
+    {
+      "id": "assess-threat",
+      "type": "action",
+      "component": "ai-analysis",
+      "action": "threat-assessment",
+      "config": {
+        "model": "claude-3-sonnet",
+        "risk_threshold": 0.7
+      },
+      "dependencies": ["security-event"]
+    },
+    {
+      "id": "create-incident",
+      "type": "action",
+      "component": "pagerduty",
+      "action": "create-incident",
+      "config": {
+        "severity": "high",
+        "escalation_policy": "security-team"
+      },
+      "dependencies": ["assess-threat"]
+    },
+    {
+      "id": "collect-evidence",
+      "type": "action",
+      "component": "evidence-collector",
+      "action": "gather-logs",
+      "config": {
+        "sources": ["blockchain", "application_logs", "network"],
+        "timeframe_hours": 24
+      },
+      "dependencies": ["security-event"]
+    },
+    {
+      "id": "notify-stakeholders",
+      "type": "action",
+      "component": "slack",
+      "action": "send-alert",
+      "config": {
+        "channel": "#security-alerts",
+        "mention_users": ["@security-team", "@devops-team"]
+      },
+      "dependencies": ["create-incident"]
+    },
+    {
+      "id": "auto-mitigate",
+      "type": "action",
+      "component": "blockchain-security",
+      "action": "emergency-pause",
+      "config": {
+        "contracts": ["cosalpha_escrow", "cosalpha_payment", "cosalpha_agentic"],
+        "require_multisig": true
+      },
+      "dependencies": ["assess-threat"]
+    },
+    {
+      "id": "create-jira-ticket",
+      "type": "action",
+      "component": "jira",
+      "action": "create-ticket",
+      "config": {
+        "project": "SEC",
+        "issue_type": "Security Incident",
+        "priority": "Highest"
+      },
+      "dependencies": ["collect-evidence"]
+    },
+    {
+      "id": "update-dashboard",
+      "type": "action",
+      "component": "dashboard",
+      "action": "update-security-status",
+      "config": {
+        "status": "incident",
+        "metrics": ["threat_level", "affected_contracts", "mitigation_actions"]
+      },
+      "dependencies": ["auto-mitigate"]
+    }
+  ]
+}

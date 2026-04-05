@@ -1,0 +1,274 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Terminal OS Design System */
+    --background: 220 20% 4%;
+    --foreground: 142 70% 65%;
+    
+    --card: 220 20% 6%;
+    --card-foreground: 142 70% 65%;
+    
+    --popover: 220 20% 6%;
+    --popover-foreground: 142 70% 65%;
+    
+    --primary: 142 70% 55%;
+    --primary-foreground: 220 20% 4%;
+    
+    --secondary: 180 60% 50%;
+    --secondary-foreground: 220 20% 4%;
+    
+    --muted: 220 15% 12%;
+    --muted-foreground: 142 40% 45%;
+    
+    --accent: 180 70% 50%;
+    --accent-foreground: 220 20% 4%;
+    
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 142 30% 20%;
+    --input: 220 15% 12%;
+    --ring: 142 70% 55%;
+    
+    --radius: 0.25rem;
+    
+    /* Custom Terminal Colors */
+    --terminal-bg: 220 20% 4%;
+    --terminal-text: 142 70% 65%;
+    --terminal-prompt: 180 70% 55%;
+    --terminal-error: 0 70% 55%;
+    --terminal-success: 142 70% 55%;
+    --terminal-warning: 45 90% 55%;
+    --terminal-info: 200 80% 60%;
+    --terminal-glow: 142 70% 55%;
+    
+    /* Sidebar (not used but required) */
+    --sidebar-background: 220 20% 6%;
+    --sidebar-foreground: 142 70% 65%;
+    --sidebar-primary: 142 70% 55%;
+    --sidebar-primary-foreground: 220 20% 4%;
+    --sidebar-accent: 220 15% 12%;
+    --sidebar-accent-foreground: 142 70% 65%;
+    --sidebar-border: 142 30% 20%;
+    --sidebar-ring: 142 70% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--terminal-bg));
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--terminal-text) / 0.3);
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--terminal-text) / 0.5);
+  }
+}
+
+@layer components {
+  /* Terminal Container */
+  .terminal-container {
+    @apply min-h-screen w-full overflow-hidden relative;
+    background: 
+      radial-gradient(ellipse at center, hsl(var(--terminal-bg)) 0%, hsl(220 20% 2%) 100%);
+  }
+  
+  /* CRT Scanline Effect */
+  .crt-overlay {
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      hsl(0 0% 0% / 0.03) 2px,
+      hsl(0 0% 0% / 0.03) 4px
+    );
+    z-index: 100;
+  }
+  
+  /* CRT Glow Effect */
+  .crt-glow {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    box-shadow: inset 0 0 150px hsl(var(--terminal-glow) / 0.03);
+    z-index: 99;
+  }
+  
+  /* Terminal Text Glow */
+  .terminal-text {
+    text-shadow: 
+      0 0 5px hsl(var(--terminal-glow) / 0.5),
+      0 0 10px hsl(var(--terminal-glow) / 0.3);
+  }
+  
+  /* Blinking Cursor */
+  .cursor-blink {
+    animation: blink 1s step-end infinite;
+  }
+  
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+  
+  /* Terminal Line Styles */
+  .terminal-prompt {
+    @apply text-accent;
+    text-shadow: 0 0 8px hsl(var(--terminal-prompt) / 0.6);
+  }
+  
+  .terminal-error {
+    color: hsl(var(--terminal-error));
+    text-shadow: 0 0 8px hsl(var(--terminal-error) / 0.5);
+  }
+  
+  .terminal-success {
+    color: hsl(var(--terminal-success));
+    text-shadow: 0 0 8px hsl(var(--terminal-success) / 0.5);
+  }
+  
+  .terminal-warning {
+    color: hsl(var(--terminal-warning));
+    text-shadow: 0 0 8px hsl(var(--terminal-warning) / 0.5);
+  }
+  
+  .terminal-info {
+    color: hsl(var(--terminal-info));
+    text-shadow: 0 0 8px hsl(var(--terminal-info) / 0.5);
+  }
+  
+  /* Boot Animation */
+  .boot-text {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  /* ASCII Art Glow */
+  .ascii-art {
+    @apply text-primary;
+    text-shadow: 
+      0 0 10px hsl(var(--terminal-glow) / 0.7),
+      0 0 20px hsl(var(--terminal-glow) / 0.4),
+      0 0 30px hsl(var(--terminal-glow) / 0.2);
+  }
+  
+  /* Stranger Things Theme Special Effects */
+  .theme-strangerthings {
+    font-family: 'Cinzel', serif !important;
+  }
+  
+  .theme-strangerthings .ascii-art {
+    font-family: 'JetBrains Mono', monospace !important;
+  }
+  
+  .theme-strangerthings .terminal-container {
+    background: 
+      radial-gradient(ellipse at center, hsl(0 30% 5%) 0%, hsl(0 0% 2%) 70%, hsl(0 0% 0%) 100%);
+  }
+  
+  .theme-strangerthings .crt-overlay {
+    background: 
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        hsl(0 100% 50% / 0.02) 2px,
+        hsl(0 100% 50% / 0.02) 4px
+      );
+  }
+  
+  .theme-strangerthings .crt-glow {
+    box-shadow: 
+      inset 0 0 150px hsl(0 100% 50% / 0.08),
+      inset 0 0 300px hsl(0 100% 30% / 0.05);
+  }
+  
+  .theme-strangerthings .terminal-text {
+    letter-spacing: 0.05em;
+    text-shadow: 
+      0 0 5px hsl(0 100% 50% / 0.8),
+      0 0 10px hsl(0 100% 50% / 0.6),
+      0 0 20px hsl(0 100% 50% / 0.4),
+      0 0 40px hsl(0 100% 50% / 0.2);
+  }
+  
+  .theme-strangerthings .ascii-art {
+    font-family: 'JetBrains Mono', monospace !important;
+    letter-spacing: 0em;
+    text-shadow: 
+      0 0 10px hsl(0 100% 50% / 0.9),
+      0 0 20px hsl(0 100% 50% / 0.7),
+      0 0 40px hsl(0 100% 50% / 0.5),
+      0 0 80px hsl(0 100% 50% / 0.3),
+      0 0 120px hsl(0 100% 40% / 0.2);
+  }
+  
+  .theme-strangerthings .terminal-prompt {
+    text-shadow: 
+      0 0 5px hsl(0 100% 60% / 0.8),
+      0 0 15px hsl(0 100% 50% / 0.5);
+  }
+  
+  .theme-strangerthings .terminal-success {
+    text-shadow: 
+      0 0 5px hsl(60 80% 50% / 0.8),
+      0 0 15px hsl(60 80% 50% / 0.5);
+  }
+  
+  .theme-strangerthings .terminal-warning {
+    text-shadow: 
+      0 0 5px hsl(30 100% 50% / 0.8),
+      0 0 15px hsl(30 100% 50% / 0.5);
+  }
+  
+  .theme-strangerthings .terminal-info {
+    text-shadow: 
+      0 0 5px hsl(200 80% 55% / 0.8),
+      0 0 15px hsl(200 80% 55% / 0.5);
+  }
+  
+  /* Flickering effect for Stranger Things */
+  @keyframes stFlicker {
+    0%, 100% { opacity: 1; }
+    92% { opacity: 1; }
+    93% { opacity: 0.8; }
+    94% { opacity: 1; }
+    96% { opacity: 0.9; }
+    97% { opacity: 1; }
+  }
+  
+  .theme-strangerthings .ascii-art {
+    animation: stFlicker 5s ease-in-out infinite;
+  }
+}

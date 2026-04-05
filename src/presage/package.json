@@ -1,0 +1,15 @@
+{
+  "name": "presage",
+  "version": "1.0.0",
+  "description": "This directory contains the C++ backend for integrating Presage SmartSpectra SDK with the React frontend.",
+  "main": "mock-server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ws": "^8.20.0"
+  }
+}

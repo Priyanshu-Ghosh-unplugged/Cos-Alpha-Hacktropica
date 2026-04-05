@@ -1,0 +1,9 @@
+{
+  "network": "devnet",
+  "deployer": "CewwgW6XETctBCD485g7NkzGhWNDURFRX26Ss4pY8oAA",
+  "governancePDA": "AaJwekGcNV8Sxgcg9zQMpdtVr619AAmqthFSuoyAi3C6",
+  "cosalphaSigner": "AbB7phsQosAnfPnPe6t4CuDbAW16PpDb9jqE3M3q5Fhp",
+  "cosalphaSecret": "[45,85,33,4,168,190,201,101,207,146,187,171,200,86,55,178,121,182,60,192,61,229,82,125,140,118,175,105,222,119,228,34,142,122,94,176,209,130,69,59,167,92,150,4,149,19,3,49,102,165,157,97,73,179,201,27,81,130,196,85,228,64,111,23]",
+  "tx_signature": "2NWJ2LF2aR9YazDyk87n5jLvq1oU4Sei9JHNDbU5ztE7KPKffCUuj9yBHhpkfvJhnmqTZhyYtFS1zQzWrvhcfT7W",
+  "type": "governance_setup"
+}

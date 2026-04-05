@@ -1,0 +1,170 @@
+{
+  "name": "Multi-Chain Governance Workflow",
+  "description": "Decentralized governance for contract upgrades and policy changes",
+  "version": "1.0.0",
+  "triggers": [
+    {
+      "type": "webhook",
+      "name": "Governance Proposal",
+      "event": "proposal_created"
+    },
+    {
+      "type": "schedule",
+      "name": "Voting Period Check",
+      "cron": "0 */12 * * *"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "proposal-received",
+      "type": "trigger",
+      "component": "governance",
+      "action": "receive-proposal",
+      "config": {
+        "validate_proposer": true,
+        "check_quorum": true
+      }
+    },
+    {
+      "id": "validate-proposal",
+      "type": "action",
+      "component": "validation",
+      "action": "check-proposal",
+      "config": {
+        "minimum_stake": 1000,
+        "proposal_types": ["upgrade", "parameter_change", "policy_update"]
+      },
+      "dependencies": ["proposal-received"]
+    },
+    {
+      "id": "create-voting-contract",
+      "type": "action",
+      "component": "blockchain-deploy",
+      "action": "deploy-voting",
+      "config": {
+        "voting_period_days": 7,
+        "quorum_percentage": 51,
+        "approval_threshold": 67
+      },
+      "dependencies": ["validate-proposal"]
+    },
+    {
+      "id": "notify-community",
+      "type": "action",
+      "component": "communication",
+      "action": "broadcast-proposal",
+      "config": {
+        "channels": ["discord", "telegram", "twitter"],
+        "include_voting_link": true
+      },
+      "dependencies": ["create-voting-contract"]
+    },
+    {
+      "id": "monitor-voting",
+      "type": "action",
+      "component": "voting-monitor",
+      "action": "track-votes",
+      "config": {
+        "real_time_updates": true,
+        "alert_on_unusual_activity": true
+      },
+      "dependencies": ["create-voting-contract"]
+    },
+    {
+      "id": "voting-period-check",
+      "type": "schedule",
+      "component": "scheduler",
+      "action": "check-voting-period",
+      "config": {
+        "check_interval_hours": 12
+      }
+    },
+    {
+      "id": "tally-votes",
+      "type": "action",
+      "component": "voting-tally",
+      "action": "count-votes",
+      "config": {
+        "verify_signatures": true,
+        "prevent_double_voting": true
+      },
+      "dependencies": ["monitor-voting", "voting-period-check"]
+    },
+    {
+      "id": "determine-outcome",
+      "type": "action",
+      "component": "decision-engine",
+      "action": "evaluate-result",
+      "config": {
+        "quorum_required": true,
+        "majority_required": true
+      },
+      "dependencies": ["tally-votes"]
+    },
+    {
+      "id": "execute-if-approved",
+      "type": "conditional",
+      "component": "condition",
+      "action": "check-approval",
+      "config": {
+        "condition": "{{outcome.approved}} == true"
+      },
+      "dependencies": ["determine-outcome"]
+    },
+    {
+      "id": "execute-upgrade",
+      "type": "action",
+      "component": "blockchain-upgrade",
+      "action": "perform-upgrade",
+      "config": {
+        "backup_current_contract": true,
+        "graceful_migration": true
+      },
+      "dependencies": ["execute-if-approved"]
+    },
+    {
+      "id": "update-governance-records",
+      "type": "action",
+      "component": "governance-ledger",
+      "action": "record-decision",
+      "config": {
+        "immutable_record": true,
+        "audit_trail": true
+      },
+      "dependencies": ["execute-upgrade"]
+    },
+    {
+      "id": "notify-result",
+      "type": "action",
+      "component": "communication",
+      "action": "announce-result",
+      "config": {
+        "channels": ["discord", "telegram", "email"],
+        "include_execution_details": true
+      },
+      "dependencies": ["update-governance-records"]
+    },
+    {
+      "id": "handle-rejection",
+      "type": "action",
+      "component": "rejection-handler",
+      "action": "process-rejection",
+      "config": {
+        "notify_proposer": true,
+        "archive_proposal": true
+      },
+      "dependencies": ["execute-if-approved"]
+    },
+    {
+      "id": "cleanup-resources",
+      "type": "action",
+      "component": "cleanup",
+      "action": "cleanup-voting",
+      "config": {
+        "retain_records": true,
+        "cleanup_temp_contracts": true
+      },
+      "dependencies": ["notify-result", "handle-rejection"]
+    }
+  ]
+}

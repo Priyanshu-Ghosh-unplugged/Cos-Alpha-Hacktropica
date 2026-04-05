@@ -1,0 +1,131 @@
+{
+  "name": "Multi-Chain Deployment Pipeline",
+  "description": "Automated deployment pipeline for Algorand, Stellar, and Solana smart contracts",
+  "version": "1.0.0",
+  "triggers": [
+    {
+      "type": "webhook",
+      "name": "GitHub Push",
+      "event": "push",
+      "branch": "main"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "github-webhook",
+      "type": "trigger",
+      "component": "github",
+      "action": "webhook",
+      "config": {
+        "repository": "Priyanshu-Ghosh-unplugged/Cos-alpha",
+        "branch": "main"
+      }
+    },
+    {
+      "id": "build-contracts",
+      "type": "action",
+      "component": "docker",
+      "action": "build",
+      "config": {
+        "dockerfile": "contracts/Dockerfile",
+        "context": "./contracts"
+      },
+      "dependencies": ["github-webhook"]
+    },
+    {
+      "id": "test-algorand",
+      "type": "action",
+      "component": "algorand",
+      "action": "deploy-testnet",
+      "config": {
+        "contract_path": "contracts/algorand/approval.teal",
+        "clear_program": "contracts/algorand/clear.teal"
+      },
+      "dependencies": ["build-contracts"]
+    },
+    {
+      "id": "test-stellar",
+      "type": "action",
+      "component": "stellar",
+      "action": "deploy-testnet",
+      "config": {
+        "contract_path": "contracts/stellar/target/wasm32-unknown-unknown/release/cosalpha_payment.wasm"
+      },
+      "dependencies": ["build-contracts"]
+    },
+    {
+      "id": "test-solana",
+      "type": "action",
+      "component": "solana",
+      "action": "deploy-testnet",
+      "config": {
+        "program_path": "contracts/solana/target/deploy/cosalpha_agentic.so"
+      },
+      "dependencies": ["build-contracts"]
+    },
+    {
+      "id": "validate-deployments",
+      "type": "action",
+      "component": "validation",
+      "action": "check-deployments",
+      "config": {
+        "required_chains": ["algorand", "stellar", "solana"]
+      },
+      "dependencies": ["test-algorand", "test-stellar", "test-solana"]
+    },
+    {
+      "id": "approval-gate",
+      "type": "action",
+      "component": "approval",
+      "action": "human-approval",
+      "config": {
+        "approvers": ["devops-team"],
+        "timeout_minutes": 60,
+        "notification_channels": ["slack", "discord"]
+      },
+      "dependencies": ["validate-deployments"]
+    },
+    {
+      "id": "deploy-mainnet-algorand",
+      "type": "action",
+      "component": "algorand",
+      "action": "deploy-mainnet",
+      "config": {
+        "contract_path": "contracts/algorand/approval.teal",
+        "clear_program": "contracts/algorand/clear.teal"
+      },
+      "dependencies": ["approval-gate"]
+    },
+    {
+      "id": "deploy-mainnet-stellar",
+      "type": "action",
+      "component": "stellar",
+      "action": "deploy-mainnet",
+      "config": {
+        "contract_path": "contracts/stellar/target/wasm32-unknown-unknown/release/cosalpha_payment.wasm"
+      },
+      "dependencies": ["approval-gate"]
+    },
+    {
+      "id": "deploy-mainnet-solana",
+      "type": "action",
+      "component": "solana",
+      "action": "deploy-mainnet",
+      "config": {
+        "program_path": "contracts/solana/target/deploy/cosalpha_agentic.so"
+      },
+      "dependencies": ["approval-gate"]
+    },
+    {
+      "id": "notify-success",
+      "type": "action",
+      "component": "notification",
+      "action": "send-message",
+      "config": {
+        "channels": ["slack", "discord", "email"],
+        "template": "deployment-success"
+      },
+      "dependencies": ["deploy-mainnet-algorand", "deploy-mainnet-stellar", "deploy-mainnet-solana"]
+    }
+  ]
+}

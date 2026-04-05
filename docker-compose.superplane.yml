@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  superplane:
+    image: ghcr.io/superplanehq/superplane-demo:stable
+    container_name: cos-alpha-superplane
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    volumes:
+      - spdata:/app/data
+      - ./superplane-config:/app/config
+    environment:
+      - NODE_ENV=development
+      - SUPERPLANE_API_PORT=3000
+      - SUPERPLANE_UI_PORT=3001
+      - WEBHOOK_BASE_URL=http://localhost:8000/api/superplane
+      - ALGORAND_NODE_URL=https://testnet-api.algorand.cloud
+      - STELLAR_RPC_URL=https://soroban-testnet.stellar.org
+      - SOLANA_RPC_URL=https://api.devnet.solana.com
+    networks:
+      - cos-alpha-network
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:7.0
+    container_name: cos-alpha-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password123
+    networks:
+      - cos-alpha-network
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: cos-alpha-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - cos-alpha-network
+
+volumes:
+  spdata:
+    driver: local
+  mongodb_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  cos-alpha-network:
+    driver: bridge

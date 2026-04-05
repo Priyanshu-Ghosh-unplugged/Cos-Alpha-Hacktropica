@@ -1,0 +1,139 @@
+#pragma version 8
+// CosAlpha Escrow Contract - Fixed for proper deployment
+
+txn ApplicationID
+int 0
+==
+bnz creation
+
+txn OnCompletion
+int DeleteApplication
+==
+bnz reject
+txn OnCompletion
+int UpdateApplication
+==
+bnz reject
+
+// Check if we have any application args
+txn NumAppArgs
+int 0
+==
+bnz reject
+
+txna ApplicationArgs 0
+byte "complete"
+==
+bnz complete
+txna ApplicationArgs 0
+byte "cancel"
+==
+bnz cancel
+txna ApplicationArgs 0
+byte "optin_asa"
+==
+bnz optin_asa
+err
+
+optin_asa:
+itxn_begin
+int axfer
+itxn_field TypeEnum
+global CurrentApplicationAddress
+itxn_field AssetReceiver
+int 0
+itxn_field AssetAmount
+txna Assets 0
+itxn_field XferAsset
+itxn_submit
+int 1
+b success
+
+cancel:
+byte "status"
+app_global_get
+int 0
+==
+assert
+txn Sender
+byte "client"
+app_global_get
+==
+txn Sender
+byte "provider"
+app_global_get
+==
+||
+assert
+byte "status"
+int 2
+app_global_put
+itxn_begin
+int pay
+itxn_field TypeEnum
+byte "client"
+app_global_get
+itxn_field Receiver
+byte "amount"
+app_global_get
+int 1000
+-
+itxn_field Amount
+itxn_submit
+int 1
+b success
+
+complete:
+byte "status"
+app_global_get
+int 0
+==
+assert
+txn Sender
+byte "client"
+app_global_get
+==
+assert
+byte "status"
+int 1
+app_global_put
+itxn_begin
+int pay
+itxn_field TypeEnum
+byte "provider"
+app_global_get
+itxn_field Receiver
+byte "amount"
+app_global_get
+int 1000
+-
+itxn_field Amount
+itxn_submit
+int 1
+b success
+
+reject:
+int 0
+b success
+
+// Creation - initialize with zeros (real init happens via app call)
+creation:
+byte "task_id"
+byte ""
+app_global_put
+byte "client"
+byte ""
+app_global_put
+byte "provider"
+byte ""
+app_global_put
+byte "amount"
+int 0
+app_global_put
+byte "status"
+int 0
+app_global_put
+int 1
+
+success:
+return

@@ -1,0 +1,143 @@
+{
+  "name": "Cross-Chain Payment Automation",
+  "description": "Automated escrow and payment processing across multiple blockchains",
+  "version": "1.0.0",
+  "triggers": [
+    {
+      "type": "webhook",
+      "name": "Task Completion",
+      "event": "task_completed"
+    },
+    {
+      "type": "webhook",
+      "name": "Escrow Funded",
+      "event": "escrow_funded"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "task-completion",
+      "type": "trigger",
+      "component": "task-system",
+      "action": "task-completed",
+      "config": {
+        "validate_work": true,
+        "quality_check": true
+      }
+    },
+    {
+      "id": "verify-escrow",
+      "type": "action",
+      "component": "blockchain-query",
+      "action": "check-escrow-balance",
+      "config": {
+        "contracts": ["cosalpha_escrow"],
+        "minimum_balance": 0.001
+      },
+      "dependencies": ["task-completion"]
+    },
+    {
+      "id": "currency-conversion",
+      "type": "action",
+      "component": "stellar",
+      "action": "convert-currency",
+      "config": {
+        "from_currency": "USD",
+        "to_currency": "XLM",
+        "exchange_rate_api": "stellar-ticker"
+      },
+      "dependencies": ["verify-escrow"]
+    },
+    {
+      "id": "release-algorand",
+      "type": "action",
+      "component": "algorand",
+      "action": "release-escrow",
+      "config": {
+        "contract": "cosalpha_escrow",
+        "recipient": "{{task.provider_address}}",
+        "amount": "{{task.payment_amount}}"
+      },
+      "dependencies": ["currency-conversion"]
+    },
+    {
+      "id": "release-stellar",
+      "type": "action",
+      "component": "stellar",
+      "action": "release-payment",
+      "config": {
+        "contract": "cosalpha_payment",
+        "recipient": "{{task.provider_address}}",
+        "amount": "{{converted_amount}}",
+        "currency": "XLM"
+      },
+      "dependencies": ["currency-conversion"]
+    },
+    {
+      "id": "log-security-event",
+      "type": "action",
+      "component": "solana",
+      "action": "log-security-event",
+      "config": {
+        "event_type": "payment_released",
+        "amount": "{{task.payment_amount}}",
+        "recipient": "{{task.provider_address}}",
+        "timestamp": "{{current_time}}"
+      },
+      "dependencies": ["release-algorand", "release-stellar"]
+    },
+    {
+      "id": "send-email-receipt",
+      "type": "action",
+      "component": "sendgrid",
+      "action": "send-email",
+      "config": {
+        "template": "payment-receipt",
+        "to": "{{task.provider_email}}",
+        "subject": "Payment Received - Task {{task.id}}",
+        "variables": {
+          "amount": "{{task.payment_amount}}",
+          "task_id": "{{task.id}}",
+          "transaction_ids": "{{all_transaction_ids}}"
+        }
+      },
+      "dependencies": ["log-security-event"]
+    },
+    {
+      "id": "update-accounting",
+      "type": "action",
+      "component": "accounting-system",
+      "action": "record-payment",
+      "config": {
+        "amount": "{{task.payment_amount}}",
+        "category": "service_payment",
+        "project": "{{task.project_id}}",
+        "transaction_hash": "{{primary_transaction_hash}}"
+      },
+      "dependencies": ["log-security-event"]
+    },
+    {
+      "id": "notify-client",
+      "type": "action",
+      "component": "slack",
+      "action": "send-message",
+      "config": {
+        "channel": "{{task.client_slack_channel}}",
+        "message": "Payment of ${{task.payment_amount}} has been released to {{task.provider_name}} for task {{task.id}}"
+      },
+      "dependencies": ["update-accounting"]
+    },
+    {
+      "id": "update-jira",
+      "type": "action",
+      "component": "jira",
+      "action": "update-ticket",
+      "config": {
+        "ticket_id": "{{task.jira_ticket}}",
+        "status": "Paid",
+        "comment": "Payment processed via multi-chain escrow system"
+      },
+      "dependencies": ["notify-client"]
+    }
+  ]
+}
